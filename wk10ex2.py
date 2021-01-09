@@ -187,3 +187,33 @@ class Board:
                     return True
         
         return False
+
+    def host_game(self):
+        while True:
+            print(self.data)
+            users_col = -1
+            while not self.allows_move(users_col):
+                users_col = int(input("Kies een kolom: "))
+            
+            self.add_move(users_col, 'X')
+            if self.wins_for('X') == True:
+                print(self.data)
+                print('X wint -- Gefeliciteerd!')
+                break
+            
+            print(self.data)
+            users_col = -1
+            while not self.allows_move(users_col):
+                users_col = int(input("Kies een kolom: "))
+            
+            self.add_move(users_col, 'O')
+            if self.wins_for('O') == True:
+                print(self.data)
+                print('O wint -- Gefeliciteerd!')
+                break
+            
+
+
+        
+        
+        
