@@ -121,11 +121,15 @@ class Board:
         
 
         # hier moeten de nummers nog onder gezet worden
-
+        s += '\n'
+        for i in range(self.width):
+            s += ' ' + str(i%10)
         return s       # het bord is compleet, geef het terug
     
     
     def add_move(self, col, ox):
+        """Adds a move to the board at a given column and specified character ox O/X
+        """
 
         for row in range(0, self.height):
             if self.data[row][col] != " ":
@@ -135,6 +139,8 @@ class Board:
         self.data[self.height - 1][col] = ox
     
     def del_move(self, col):
+        """Deletes the last move in a specific column
+        """
         for row in range(0, self.height):
             if self.data[row][col] != " ":
                 self.data[row][col] = " "
@@ -162,6 +168,8 @@ class Board:
                 next_checker = 'X'
 
     def allows_move(self, col):
+        """Checks if a move is allowed in the specific column
+        """
 
         if col < 0 or col >= self.width :
             return False
@@ -170,8 +178,19 @@ class Board:
         
         else:
             return True
+    
+    def is_full(self):
+        """Checks if the board is full
+        """
+        for col in range(0, self.width):
+            if self.allows_move(col) == True:
+                return False
+        
+        return True
         
     def wins_for(self, ox):
+        """Checks if the board is winning for the specific ox: O/X
+        """
         # Controleren op horizontale overwinningen
         for row in range(0, self.height):
             for col in range(0, self.width):
@@ -187,39 +206,58 @@ class Board:
         return False
 
     def host_game(self):
+        """Hosts a complete game of 'four in a row'
+        """
         while True:
-            print(self.data)
+            print(self.__repr__())
             users_col = -1
             while not self.allows_move(users_col):
                 users_col = int(input("Kies een kolom: "))
             
             self.add_move(users_col, 'X')
             if self.wins_for('X') == True:
-                print(self.data)
+                print(self.__repr__())
                 print('X wint -- Gefeliciteerd!')
                 break
+            elif self.is_full() == True:
+                print('Gelijkspel!!!')
+                break
+
+             
+
+                
+
+
             
-            print(self.data)
+            print(self.__repr__())
             users_col = -1
             while not self.allows_move(users_col):
                 users_col = int(input("Kies een kolom: "))
             
             self.add_move(users_col, 'O')
             if self.wins_for('O') == True:
-                print(self.data)
+                print(self.__repr__())
                 print('O wint -- Gefeliciteerd!')
                 break
 
+            elif self.is_full() == True:
+                print('Gelijkspel!!!')
+                break
 
 class Player:
     
 
     def __init__(self, ox, tbt, ply):
+        """Constructs objects of type Player with the given ox(O/X), strategy and 
+            the amount of moves looking ahead 'ply'
+        """
         self.ox = ox
         self.tbt = tbt
         self.ply = ply
 
     def __repr__(self):
+        """Returns the string representation of the Player
+        """
 
         s = "Player: ox = " + self.ox + ", "
         s += "tbt = " + self.tbt + ", "
@@ -227,6 +265,8 @@ class Player:
         return s
 
     def opp_ch(self):
+        """Character opposite of self
+        """
         if self.ox == 'X':
             return 'O'
         elif self.ox == 'O':
@@ -234,6 +274,8 @@ class Player:
     
 
     def score_board(self, b):
+        """Gives the board a score if its winning or losing or equal
+        """
         if b.wins_for(self.ox) == True:
             return 100.0
         elif b.wins_for(self.opp_ch()) == True:
@@ -243,5 +285,59 @@ class Player:
         
 
     def tiebreak_move(self, scores):
+        """Makes a move based on the chosen strategy and chooses between moves with    
+            the highest score
+        """
         
+        import random
+        
+        maximum = max(scores)
+        max_indices = []
+        for i, x in enumerate(scores):
+            if x == max(scores):
+                max_indices += [i]
+        
+        if self.tbt == 'LEFT':
+            return max_indices[0]
+        elif self.tbt == 'RIGHT':
+            return max_indices[-1]
+        
+        elif self.tbt == 'RANDOM':
+            
+        
+            return max_indices[random.choice(range(len(max_indices)))]
+
+
+    def scores_for(self, b):
+        """Scores the board and gives every column a score to check for winning moves or best moves
+        """
+
+        scores = [50.0] * b.width
+
+        for x in range(b.width):
+            if b.allows_move(x) == False:
+                scores[x] == -1.0
+            elif b.wins_for(self.ox) == True:
+                scores[x] == 100.0
+            elif b.wins_for(self.opp_ch()) == True:
+                scores[x] == 0.0
+            elif self.ply == 0:
+                scores[x] == 50.0
+            else: 
+                b.add_move(x, self.ox)
+                if b.wins_for(self.ox) == True:
+                    scores[x] == 100.0
+                elif b.wins_for(self.opp_ch()) == True:
+                    scores[x] == 0.0
+                elif b.allows_move(x) == False:
+                    scores[x] == -1.0
+                
+
+                # Ben nog niet verder gekomen hiermee :S
+        
+        
+        
+        
+                
+
 
