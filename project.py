@@ -244,6 +244,51 @@ class Board:
                 print('Gelijkspel!!!')
                 break
 
+    def play_game(self, px, po, show_scores=False):
+        """
+        Plays a game of Connect Four between players px and po.
+        If show_scores is True, the player's board evaluations are printed each turn.
+        """
+        ox = 'O'
+        while True:
+            # druk het bord af
+            print(self)
+
+            # controleer of het spel afgelopen is
+            if self.wins_for(ox):
+                print(f'{ox} heeft gewonnen!')
+                break
+            elif self.is_full():
+                print('Gelijkspel!')
+                break
+
+            # verander de huidige speler
+            if ox == 'O':
+                ox = 'X'
+                player = px
+            else:
+                ox = 'O'
+                player = po
+
+            if player == 'human':
+                # laat de menselijke speler een kolom kiezen
+                col = -1
+                while not self.allows_move(col):
+                    col = int(input('Kolom voor ' + ox + ': '))
+            else:
+                # de computerspeler berekent een zet
+                if show_scores:
+                    scores = player.scores_for(self)
+                    print('Scores voor ', ox, ':', [int(sc) for sc in scores])
+                    col = player.tiebreak_move(scores)
+                else:
+                    col = player.next_move(self)
+
+            # voer de zet uit
+            self.add_move(col, ox)   
+                    
+                
+
 class Player:
     
 
@@ -311,33 +356,51 @@ class Player:
     def scores_for(self, b):
         """Scores the board and gives every column a score to check for winning moves or best moves
         """
-
+        
         scores = [50.0] * b.width
-
-        for x in range(b.width):
+        
+        op = Player(self.opp_ch(), self.tbt, (self.ply - 1) )
+        for x in range(len(scores)):
+            
+            
             if b.allows_move(x) == False:
-                scores[x] == -1.0
+                scores[x] = -1.0
+                
             elif b.wins_for(self.ox) == True:
-                scores[x] == 100.0
+                scores[x] = 100.0
+                
             elif b.wins_for(self.opp_ch()) == True:
-                scores[x] == 0.0
+                scores[x] = 0.0
+                
             elif self.ply == 0:
-                scores[x] == 50.0
+                scores[x] = 50.0
+                
             else: 
+                
                 b.add_move(x, self.ox)
+                
+                
                 if b.wins_for(self.ox) == True:
-                    scores[x] == 100.0
+                    scores[x] = 100.0
+                    b.del_move(x)
                 elif b.wins_for(self.opp_ch()) == True:
-                    scores[x] == 0.0
+                    scores[x] = 0.0
+                    b.del_move(x)
                 elif b.allows_move(x) == False:
-                    scores[x] == -1.0
-                
+                    scores[x] = -1.0
+                    b.del_move(x)
+                else:
+                    scores[x] = 100 - max(op.scores_for(b))
+                    b.del_move(x)
+                    
+        
+        return scores
 
-                # Ben nog niet verder gekomen hiermee :S
-        
-        
-        
-        
-                
+    def next_move(self, b):
+        scores = self.scores_for(b)
+        best_move = self.tiebreak_move(scores)
 
+        return best_move    
+
+    
 
